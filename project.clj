@@ -1,4 +1,4 @@
-(defproject cryptick "0.1.0-SNAPSHOT"
+(defproject cryptick "0.1.0"
   :description "Library for retrieving ticker data from crypto-currency-related exchanges"
   :url "https://github.com/jphackworth/cryptick"
   :license {:name "Mozilla Public License Version 2.0"
