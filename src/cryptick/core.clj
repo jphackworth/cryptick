@@ -56,7 +56,7 @@
     :okcoin (assoc @default-options :pair pair :exchange exchange)
     :havelock (assoc @default-options :pair pair :exchange exchange :form-params {:symbol pair})
     nil))
-; {:keys [status headers body error opts]}
+
 (defn callback [response]
    (case (:status response) 
      200 (let [{:keys [pair exchange]} (:opts response)]
