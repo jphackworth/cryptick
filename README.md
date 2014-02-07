@@ -8,7 +8,41 @@ A Clojure library designed to retrieve ticker data from several popular crypto-c
 - [bitstamp](https://bitstamp.net)
 - [havelock](https://www.havelockinvestments.com)
 
+Cryptick is intended to retrieve ticker data, fast, from various exchanges. No authentication or API credentials are required.
+
+http-kit is used for fast asynchronous requests. Standard (ticker ...) returns a promise. Use @(ticker ...) to block for the result.
+
+When the response is received, additional processing of the JSON is performed. This will ensure that all numeric fields are
+returned as numbers, rather than strings.
+
 ## Usage
+
+### In Project
+
+[cryptick "0.1.0"]
+
+```clojure
+(:require [cryptick.core :refer [ticker])
+@(ticker :btce "btc_eur") ; (ticker exchange pair)
+```
+
+**Valid exchanges**:
+
+- :btce
+- :bter
+- :okcoin
+- :bitstamp
+- :havelock
+
+**Valid currency pairs**:
+
+Please check with each site as to valid currency pairs. 
+
+In the havelock's case, use the market symbol for the pair argument.
+
+Since bitstamp only does btc_usd, the pair is hardcoded, but you still need to specify it.
+
+### REPL example
 
 ```
 user=> (use 'cryptick.core)
@@ -20,13 +54,18 @@ user=> @(ticker :bter "doge_btc")
 user=> @(ticker :okcoin "ltc_cny")
 {:buy 119.41, :high 127.47, :last 119.4, :low 118.11, :sell 119.43, :vol 2307633.95599992}
 user=> @(ticker :havelock "AM1")
-{:last 0.496, :units 19322, :1d {:min 0.49, :max 0.55, :vwap 0.50577136, :vol 160, :btc 80.92341737}, :7d {:min 0.49, :max 0.648, :vwap 0.54630067, :vol 571, :btc 311.93768258}, :30d {:min 0.34, :max 0.745, :vwap 0.53086017, :vol 4620, :btc 2452.57398638}}
+{:last 0.496, :units 19322, :1d {:min 0.49, :max 0.55, :vwap 0.50577136, :vol 160, :btc 80.92341737}, :7d {:min 0.49, :max 0.648, :vwap 0.54630067, :vol 571, :btc 311.93768258}, :30d {:min 0.34, :max 0.745, :vwap 0.53086017, :vol 4620, :btc 2452.57398638}} 
+user=> (def x (ticker :bitstamp "btc_usd"))
+#'user/x
+user=> x
+#<core$promise$reify__6310@2c7e895e: {:high 803.0, :last 699.0, :timestamp 1391756391, :bid 697.64, :volume 35995.68283103, :low 666.67, :ask 699.0}>
+user=> @x
+{:high 803.0, :last 699.0, :timestamp 1391756391, :bid 697.64, :volume 35995.68283103, :low 666.67, :ask 699.0}
 user=> 
 ```
 
 ## License
 
-Copyright © 2014 FIXME
+Copyright © 2014 John P. Hackworth <jph@hackworth.be>
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Distributed under the Mozilla Public License Version 2.0
