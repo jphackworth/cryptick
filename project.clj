@@ -6,9 +6,4 @@
             :url "https://www.mozilla.org/MPL/2.0/"}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [http-kit "2.1.16"]
-                 [cheshire "5.3.1"]
-                 [prismatic/plumbing "0.2.1"]
-                 ]
-  :profiles {:dev {:dependencies [[org.clojure/tools.namespace "0.2.4"]]}
-             :production {:dependencies [[org.clojure/tools.nrepl "0.2.3"]
-                                         [criterium "0.4.3"]]}})
+                 [cheshire "5.3.1"]])

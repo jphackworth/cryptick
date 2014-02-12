@@ -60,7 +60,7 @@
                 (parse-numbers (parse-string body true))
                 ((keyword (upper-case pair)) (parse-numbers (parse-string body true))))
     :bitcoincharts-weighted-prices (if-not (nil? pair) 
-                                     (select-keys (parse-string body true) [:timestamp (keyword (upper-case pair))])
+                                     (parse-numbers (select-keys (parse-string body true) [:timestamp (keyword (upper-case pair))]))
                                      (parse-numbers (parse-string body true)))
     :bitcoincharts-markets (if-not (nil? pair) 
                              (first (filter #(= pair (:symbol %)) (parse-string body true)))
