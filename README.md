@@ -1,5 +1,7 @@
 # cryptick
 
+![version](https://clojars.org/cryptick/latest-version.svg)
+
 A Clojure library designed to retrieve ticker data from several popular crypto-currency exchanges:
 
 - [btc-e](https://btc-e.com)
@@ -22,17 +24,15 @@ returned as numbers, rather than strings.
 
 Cryptick requires: 
 
-- [org.clojure/clojure "1.5.1"] 
-- [http-kit "2.1.16"] 
-- [cheshire "5.3.1"]
-
-### Project Dependency
-
-Add [cryptick "0.1.1"] to your project.clj :dependencies.
+```Clojure
+[org.clojure/clojure "1.5.1"] 
+[http-kit "2.1.16"] 
+[cheshire "5.3.1"]
+```
 
 ### In Namespace
 
-```
+```Clojure
 (ns myapp.core 
   (:require [cryptick.core :refer [ticker]]))
 ```
@@ -56,7 +56,7 @@ Please check with each site's API as to all valid currency pairs. Examples have 
 
 ### REPL examples
 
-```
+```Clojure
 user=> (use 'cryptick.core)
 nil
 
