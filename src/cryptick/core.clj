@@ -10,7 +10,7 @@
             [clojure.string :refer [upper-case lower-case]]))
 
 (def default-options (atom {:content-type "application/json"
-                    :user-agent "cryptick 0.1.1"
+                    :user-agent "cryptick 0.1.2"
                     :insecure? false
                     :keepalive -1
                     }))
@@ -36,8 +36,7 @@
                                            :limits "Max queries, once every 15 minutes"}
                   :bitcoincharts-markets {:url "http://api.bitcoincharts.com/v1/markets.json" 
                                            :method :get
-                                           :limits "Max queries, once every 15 minutes"}
-                  }))
+                                           :limits "Max queries, once every 15 minutes"}}))
 
 (defn parse-numbers [m] 
   (into {} 
@@ -49,22 +48,22 @@
           (if (and (instance? java.lang.String v) (boolean (re-matches #"^(\d*\.?\d*)$" v))) ; 2, 50, 0.001, 7.00091
             (read-string v) 
             v)))])))       
-                                                    
-(defn parse-for [exchange body & [pair]]
+
+(defn parse-for [exchange ticker & [pair]]
   (case exchange 
-    :btce (:ticker (parse-string body true))
-    :bter (parse-numbers (dissoc (parse-string body true) :result))
-    :bitstamp (parse-numbers (parse-string body true))
-    :okcoin (parse-numbers (:ticker (parse-string body true)))
+    :btce (:ticker ticker)
+    :bter (parse-numbers (dissoc ticker :result))
+    :bitstamp (parse-numbers ticker)
+    :okcoin (parse-numbers (:ticker ticker))
     :havelock (if (nil? pair)
-                (parse-numbers (parse-string body true))
-                ((keyword (upper-case pair)) (parse-numbers (parse-string body true))))
+                (parse-numbers ticker)
+                ((keyword (upper-case pair)) (parse-numbers ticker)))
     :bitcoincharts-weighted-prices (if-not (nil? pair) 
-                                     (parse-numbers (select-keys (parse-string body true) [:timestamp (keyword (upper-case pair))]))
-                                     (parse-numbers (parse-string body true)))
+                                     (parse-numbers (select-keys ticker [:timestamp (keyword (upper-case pair))]))
+                                     (parse-numbers ticker))
     :bitcoincharts-markets (if-not (nil? pair) 
-                             (first (filter #(= pair (:symbol %)) (parse-string body true)))
-                             (parse-string body true))
+                             (first (filter #(= pair (:symbol %)) ticker))
+                             ticker)
     nil))
 
 (defn url-for [exchange & [pair]]
@@ -76,24 +75,24 @@
     :havelock (:url (exchange @feeds))
     :bitcoincharts-weighted-prices (:url (exchange @feeds))
     :bitcoincharts-markets (:url (exchange @feeds))
-    nil
-    ))
+    nil))
 
 (defn http-options-for [exchange & [pair]] 
   (case exchange 
     :bitstamp (assoc @default-options :pair "btc_usd" :exchange exchange :method (:method (exchange @feeds)))
     :havelock (if (nil? pair)
                 (assoc @default-options :pair pair :exchange exchange :method :get) 
-                (assoc @default-options :pair pair :exchange exchange :form-params {:symbol pair} :method :post)
-                )
-    (assoc @default-options :pair pair :exchange exchange :method (:method (exchange @feeds))) 
-    ))
+                (assoc @default-options :pair pair :exchange exchange :form-params {:symbol pair} :method :post))
+    (assoc @default-options :pair pair :exchange exchange :method (:method (exchange @feeds)))))
 
-(defn callback [response]
-   (case (:status response) 
+(defn callback [{:keys [status headers body error opts] :as response}]
+  (if error 
+    (throw (Exception. (format "Request failed, error: %s" error))) 
+    (case status 
      200 (let [{:keys [pair exchange]} (:opts response)]
-           (parse-for exchange (:body response) pair))
-     (throw (Exception. response))))
+           (let [ticker (parse-string body true)]
+             (if-not (nil? ticker) (parse-for exchange ticker pair))))
+     (throw (Exception. (format "Request failed, response code: %s" status))))))
 
 (defn ticker [exchange & [pair]]
   (if-not (contains? @feeds exchange) 
@@ -101,7 +100,6 @@
     (if (and (:pair-required? (exchange @feeds)) (nil? pair)) 
       (throw (Exception. (format "Currency pair must be specified for %s. Example: \"%s\"" exchange (:pair-example (exchange @feeds)))))
       (let [options (http-options-for exchange pair) url (url-for exchange pair)]
-        ;(case (:method (exchange @feeds))
         (case (:method options)
           :get (http/get url options callback)
           :post (http/post url options callback)
