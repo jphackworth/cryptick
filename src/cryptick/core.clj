@@ -5,7 +5,7 @@
 ; file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 (ns cryptick.core
-   (:require [org.httpkit.client :as http]
+  (:require [org.httpkit.client :as http]
             [cheshire.core :refer :all]
             [clojure.string :refer [upper-case lower-case]]))
 
