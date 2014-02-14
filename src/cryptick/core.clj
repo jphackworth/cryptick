@@ -9,11 +9,13 @@
             [cheshire.core :refer :all]
             [clojure.string :refer [upper-case lower-case]]))
 
-(def default-options (atom {:content-type "application/json"
-                    :user-agent "cryptick 0.1.2"
-                    :insecure? false
-                    :keepalive -1
-                    }))
+(def default-options
+  (atom
+   {:content-type "application/json"
+    :user-agent "cryptick 0.1.2"
+    :insecure? false
+    :keepalive -1
+    }))
 
 (def feeds
   (atom
