@@ -85,24 +85,29 @@
                       ticker))
                     }}))
 
-(defn parse-numbers [m]
+(defn parse-numbers
+  "JSON reader helper which implements string to double decoding. This
+  function is used to normalize string encoded numerics into raw JVM
+  numerics for better use from Clojure clients."
+
+  [m]
   (into {}
         (for [[k v] m]
           [k
-           (cond (instance? java.util.Map v)
+           (cond (map? v)
                    (parse-numbers v)
 
                  (or (nil? v)
                      (number? v))
                    v
 
-                 (and (instance? java.lang.String v)
+                 (and (string? v)
                       (->> v
                            (re-matches #"^(\d*\.?\d*)$")))
                    (Double/parseDouble v)
 
                  true
-                   v)]))
+                   v)])))
 
 
 (defn parse-for
