@@ -170,14 +170,27 @@
            (if-let [optsfn (get exchange :http-options)]
              (optsfn exchange pair)))))
 
-(defn callback [{:keys [status headers body error opts] :as response}]
+
+(defn callback
+  [{:keys [status headers body error opts] :as response}]
+
   (if error
-    (throw (Exception. (format "Request failed, error: %s" error)))
+    (-> "Request failed, error: %s"
+        (format error)
+        (Exception.)
+        (throw))
+
     (case status
-     200 (let [{:keys [pair exchange]} (:opts response)]
-           (let [ticker (parse-string body true)]
-             (if-not (nil? ticker) (parse-for exchange ticker pair))))
-     (throw (Exception. (format "Request failed, response code: %s" status))))))
+      200 (let [{:keys [pair exchange]} (:opts response)
+                ticker (parse-string body true)]
+            (if-not (nil? ticker)
+              (parse-for exchange ticker pair)))
+
+      (-> "Request failed, response code: %s"
+          (format status)
+          (Exception.)
+          (throw))))
+
 
 (defn ticker [exchange & [pair]]
   (if-not (contains? @feeds exchange)
