@@ -53,7 +53,12 @@
                       (get (parse-numbers ticker)
                            (keyword (upper-case pair)))))
        :url-for (fn [xchng pair]
-                  (:url xchng))}
+                  (:url xchng))
+       :http-options (fn [xchng pair]
+                       (if (nil? pair)
+                         {:method :get}
+                         {:form-params {:symbol pair}
+                          :method :post}))}
 
     :bitstamp
       {:url "https://www.bitstamp.net/api/ticker/"
@@ -61,7 +66,11 @@
        :parse-for (fn [ticker pair]
                     (parse-numbers ticker))
        :url-for (fn [xchng pair]
-                  (:url xchng))}
+                  (:url xchng))
+       :http-options (fn [xchng pair]
+                       {:pair "btc_usd"
+                        :exchange exchange
+                        :method (:method xchng)})}
 
     :okcoin
       {:url "https://www.okcoin.com/api/ticker.do?symbol="
@@ -148,13 +157,18 @@
      exchange pair)))
 
 
-(defn http-options-for [exchange & [pair]]
-  (case exchange
-    :bitstamp (assoc @default-options :pair "btc_usd" :exchange exchange :method (:method (exchange @feeds)))
-    :havelock (if (nil? pair)
-                (assoc @default-options :pair pair :exchange exchange :method :get)
-                (assoc @default-options :pair pair :exchange exchange :form-params {:symbol pair} :method :post))
-    (assoc @default-options :pair pair :exchange exchange :method (:method (exchange @feeds)))))
+(defn http-options-for
+  "Builds an options structure specific to making requests of the
+  indicated exchange and ticker."
+
+  [exchange & [pair]]
+  (let [ex (get @feeds exchange)]
+    (merge @default-options
+           {:pair pair
+            :exchange exchange
+            :method (:method ex)}
+           (if-let [optsfn (get exchange :http-options)]
+             (optsfn exchange pair)))))
 
 (defn callback [{:keys [status headers body error opts] :as response}]
   (if error
