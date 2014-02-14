@@ -25,7 +25,11 @@
        :pair-required? true
        :pair-example "btc_usd"
        :parse-for (fn [ticker pair]
-                    (:ticker ticker))}
+                    (:ticker ticker))
+       :url-for (fn [xchng pair]
+                  (format "%s/%s/ticker"
+                          (:url xchng)
+                          (-> pair name lower-case)))}
 
     :bter
       {:url "http://data.bter.com/api/1/ticker"
@@ -34,7 +38,11 @@
        :pair-example "doge_btc"
        :parse-for (fn [ticker pair]
                     (parse-numbers
-                     (dissoc ticker :result)))}
+                     (dissoc ticker :result)))
+       :url-for (fn [xchng pair]
+                  (format "%s/%s"
+                          (:url xchng)
+                          pair))}
 
     :havelock
       {:url "https://www.havelockinvestments.com/r/tickerfull"
@@ -43,13 +51,17 @@
                     (if (nil? pair)
                       (parse-numbers ticker)
                       (get (parse-numbers ticker)
-                           (keyword (upper-case pair)))))}
+                           (keyword (upper-case pair)))))
+       :url-for (fn [xchng pair]
+                  (:url xchng))}
 
     :bitstamp
       {:url "https://www.bitstamp.net/api/ticker/"
        :method :get
        :parse-for (fn [ticker pair]
-                    (parse-numbers ticker))}
+                    (parse-numbers ticker))
+       :url-for (fn [xchng pair]
+                  (:url xchng))}
 
     :okcoin
       {:url "https://www.okcoin.com/api/ticker.do?symbol="
@@ -57,7 +69,11 @@
        :pair-required? true
        :pair-example "ltc_cny"
        :parse-for (fn [ticker pair]
-                    (parse-numbers (:ticker ticker)))}
+                    (parse-numbers (:ticker ticker)))
+       :url-for (fn [xchng pair]
+                  (format "%s%s"
+                          (:url xchng)
+                          (lower-case pair)))}
 
     :bitcoincharts-weighted-prices
       {:url "http://api.bitcoincharts.com/v1/weighted_prices.json"
@@ -71,7 +87,9 @@
                            [:timestamp]
                            (select-keys ticker)
                            (parse-numbers))
-                      (parse-numbers ticker)))}
+                      (parse-numbers ticker)))
+       :url-for (fn [xchng pair]
+                  (:url xchng))}
 
     :bitcoincharts-markets
       {:url "http://api.bitcoincharts.com/v1/markets.json"
@@ -83,7 +101,8 @@
                            (filter #(= pair (:symbol %)))
                            (first))
                       ticker))
-                    }}))
+       :url-for (fn [xchng pair]
+                  (:url xchng))}}))
 
 (defn parse-numbers
   "JSON reader helper which implements string to double decoding. This
@@ -120,16 +139,14 @@
    ticker pair))
 
 
-(defn url-for [exchange & [pair]]
-  (case exchange
-    :btce (format "%s/%s/ticker" (:url (exchange @feeds)) (lower-case (name pair)))
-    :bter (format "%s/%s" (:url (exchange @feeds)) pair)
-    :okcoin (format "%s%s" (:url (exchange @feeds)) (lower-case pair))
-    :bitstamp (:url (exchange @feeds))
-    :havelock (:url (exchange @feeds))
-    :bitcoincharts-weighted-prices (:url (exchange @feeds))
-    :bitcoincharts-markets (:url (exchange @feeds))
-    nil))
+(defn url-for
+  "Builds the query URL for a given exchange and ticker symbol"
+
+  [exchange & [pair]]
+  (if-let [exchange (get @feeds exchange)]
+    ((get exchange :url-for)
+     exchange pair)))
+
 
 (defn http-options-for [exchange & [pair]]
   (case exchange
