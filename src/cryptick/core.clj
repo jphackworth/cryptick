@@ -189,16 +189,27 @@
       (-> "Request failed, response code: %s"
           (format status)
           (Exception.)
-          (throw))))
+          (throw)))))
 
 
-(defn ticker [exchange & [pair]]
-  (if-not (contains? @feeds exchange)
-    (throw (Exception. (format "Invalid exchange specified: %s" exchange)))
-    (if (and (:pair-required? (exchange @feeds)) (nil? pair))
-      (throw (Exception. (format "Currency pair must be specified for %s. Example: \"%s\"" exchange (:pair-example (exchange @feeds)))))
-      (let [options (http-options-for exchange pair) url (url-for exchange pair)]
-        (case (:method options)
-          :get (http/get url options callback)
-          :post (http/post url options callback)
-          nil)))))
+(defn ticker
+  [exchange & [pair]]
+  (let [ex (get @feeds exchange)]
+    (when-not ex
+      (-> "Invalid exchange specified: %s"
+          (format exchange)
+          (Exception.)
+          (throw)))
+
+    (when (and (:pair-required? ex)
+               (nil? pair))
+      (-> "Currency pair must be specified for %s. Example: \"%s\""
+          (format exchange (:pair-example ex))
+          (Exception.)
+          (throw)))
+
+    (let [options (http-options-for exchange pair)
+          url     (url-for exchange pair)]
+      (case (:method options)
+        :get  (http/get url options callback)
+        :post (http/post url options callback)))))
