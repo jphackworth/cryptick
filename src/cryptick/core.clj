@@ -15,28 +15,42 @@
                     :keepalive -1
                     }))
 
-(def feeds (atom {:btce {:url "https://btc-e.com/api/2"
-                         :method :get
-                         :pair-required? true
-                         :pair-example "btc_usd"}
-                  :bter {:url "http://data.bter.com/api/1/ticker"
-                         :method :get
-                         :pair-required? true
-                         :pair-example "doge_btc"}
-                  :havelock {:url "https://www.havelockinvestments.com/r/tickerfull"
-                             :method :post}
-                  :bitstamp {:url "https://www.bitstamp.net/api/ticker/"
-                             :method :get}
-                  :okcoin {:url "https://www.okcoin.com/api/ticker.do?symbol="
-                           :method :get
-                           :pair-required? true
-                           :pair-example "ltc_cny"}
-                  :bitcoincharts-weighted-prices {:url "http://api.bitcoincharts.com/v1/weighted_prices.json"
-                                           :method :get
-                                           :limits "Max queries, once every 15 minutes"}
-                  :bitcoincharts-markets {:url "http://api.bitcoincharts.com/v1/markets.json"
-                                           :method :get
-                                           :limits "Max queries, once every 15 minutes"}}))
+(def feeds
+  (atom
+   {:btce
+      {:url "https://btc-e.com/api/2"
+       :method :get
+       :pair-required? true
+       :pair-example "btc_usd"}
+
+    :bter
+      {:url "http://data.bter.com/api/1/ticker"
+       :method :get
+       :pair-required? true
+       :pair-example "doge_btc"}
+
+    :havelock
+      {:url "https://www.havelockinvestments.com/r/tickerfull"
+       :method :post}
+
+    :bitstamp
+      {:url "https://www.bitstamp.net/api/ticker/"
+       :method :get}
+
+    :okcoin
+      {:url "https://www.okcoin.com/api/ticker.do?symbol="
+       :method :get
+       :pair-required? true
+       :pair-example "ltc_cny"}
+    :bitcoincharts-weighted-prices
+      {:url "http://api.bitcoincharts.com/v1/weighted_prices.json"
+       :method :get
+       :limits "Max queries, once every 15 minutes"}
+
+    :bitcoincharts-markets
+      {:url "http://api.bitcoincharts.com/v1/markets.json"
+       :method :get
+       :limits "Max queries, once every 15 minutes"}}))
 
 (defn parse-numbers [m]
   (into {}
