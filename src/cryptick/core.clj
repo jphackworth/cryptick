@@ -56,14 +56,22 @@
 
 (defn parse-numbers [m]
   (into {}
-    (for [[k v] m] [k
-      (if (instance? java.util.Map v)
-        (parse-numbers v)
-        (if (or (nil? v) (number? v))
-          v
-          (if (and (instance? java.lang.String v) (boolean (re-matches #"^(\d*\.?\d*)$" v))) ; 2, 50, 0.001, 7.00091
-            (read-string v)
-            v)))])))
+        (for [[k v] m]
+          [k
+           (cond (instance? java.util.Map v)
+                   (parse-numbers v)
+
+                 (or (nil? v)
+                     (number? v))
+                   v
+
+                 (and (instance? java.lang.String v)
+                      (->> v
+                           (re-matches #"^(\d*\.?\d*)$")))
+                   (Double/parseDouble v)
+
+                 true
+                   v)]))
 
 (defn parse-for [exchange ticker & [pair]]
   (case exchange
