@@ -23,36 +23,67 @@
       {:url "https://btc-e.com/api/2"
        :method :get
        :pair-required? true
-       :pair-example "btc_usd"}
+       :pair-example "btc_usd"
+       :parse-for (fn [ticker pair]
+                    (:ticker ticker))}
 
     :bter
       {:url "http://data.bter.com/api/1/ticker"
        :method :get
        :pair-required? true
-       :pair-example "doge_btc"}
+       :pair-example "doge_btc"
+       :parse-for (fn [ticker pair]
+                    (parse-numbers
+                     (dissoc ticker :result)))}
 
     :havelock
       {:url "https://www.havelockinvestments.com/r/tickerfull"
-       :method :post}
+       :method :post
+       :parse-for (fn [ticker pair]
+                    (if (nil? pair)
+                      (parse-numbers ticker)
+                      (get (parse-numbers ticker)
+                           (keyword (upper-case pair)))))}
 
     :bitstamp
       {:url "https://www.bitstamp.net/api/ticker/"
-       :method :get}
+       :method :get
+       :parse-for (fn [ticker pair]
+                    (parse-numbers ticker))}
 
     :okcoin
       {:url "https://www.okcoin.com/api/ticker.do?symbol="
        :method :get
        :pair-required? true
-       :pair-example "ltc_cny"}
+       :pair-example "ltc_cny"
+       :parse-for (fn [ticker pair]
+                    (parse-numbers (:ticker ticker)))}
+
     :bitcoincharts-weighted-prices
       {:url "http://api.bitcoincharts.com/v1/weighted_prices.json"
        :method :get
-       :limits "Max queries, once every 15 minutes"}
+       :limits "Max queries, once every 15 minutes"
+       :parse-for (fn [ticker pair]
+                    (if-not (nil? pair)
+                      (->> pair
+                           (upper-case)
+                           (keyword)
+                           [:timestamp]
+                           (select-keys ticker)
+                           (parse-numbers))
+                      (parse-numbers ticker)))}
 
     :bitcoincharts-markets
       {:url "http://api.bitcoincharts.com/v1/markets.json"
        :method :get
-       :limits "Max queries, once every 15 minutes"}}))
+       :limits "Max queries, once every 15 minutes"
+       :parse-for (fn [ticker pair]
+                    (if-not (nil? pair)
+                      (->> ticker
+                           (filter #(= pair (:symbol %)))
+                           (first))
+                      ticker))
+                    }}))
 
 (defn parse-numbers [m]
   (into {}
@@ -73,22 +104,16 @@
                  true
                    v)]))
 
-(defn parse-for [exchange ticker & [pair]]
-  (case exchange
-    :btce (:ticker ticker)
-    :bter (parse-numbers (dissoc ticker :result))
-    :bitstamp (parse-numbers ticker)
-    :okcoin (parse-numbers (:ticker ticker))
-    :havelock (if (nil? pair)
-                (parse-numbers ticker)
-                ((keyword (upper-case pair)) (parse-numbers ticker)))
-    :bitcoincharts-weighted-prices (if-not (nil? pair)
-                                     (parse-numbers (select-keys ticker [:timestamp (keyword (upper-case pair))]))
-                                     (parse-numbers ticker))
-    :bitcoincharts-markets (if-not (nil? pair)
-                             (first (filter #(= pair (:symbol %)) ticker))
-                             ticker)
-    nil))
+
+(defn parse-for
+  "Parses a ticker query to the argument exchange given a pair"
+
+  [exchange ticker & [pair]]
+  ((-> @feeds
+       (get exchange)
+       (get :parse-for))
+   ticker pair))
+
 
 (defn url-for [exchange & [pair]]
   (case exchange
