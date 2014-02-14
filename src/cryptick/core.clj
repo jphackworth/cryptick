@@ -9,6 +9,32 @@
             [cheshire.core :refer :all]
             [clojure.string :refer [upper-case lower-case]]))
 
+
+(defn parse-numbers
+  "JSON reader helper which implements string to double decoding. This
+  function is used to normalize string encoded numerics into raw JVM
+  numerics for better use from Clojure clients."
+
+  [m]
+  (into {}
+        (for [[k v] m]
+          [k
+           (cond (map? v)
+                   (parse-numbers v)
+
+                 (or (nil? v)
+                     (number? v))
+                   v
+
+                 (and (string? v)
+                      (->> v
+                           (re-matches #"^(\d*\.?\d*)$")))
+                   (Double/parseDouble v)
+
+                 true
+                   v)])))
+
+
 (def default-options
   (atom
    {:content-type "application/json"
@@ -69,7 +95,6 @@
                   (:url xchng))
        :http-options (fn [xchng pair]
                        {:pair "btc_usd"
-                        :exchange exchange
                         :method (:method xchng)})}
 
     :okcoin
@@ -112,30 +137,6 @@
                       ticker))
        :url-for (fn [xchng pair]
                   (:url xchng))}}))
-
-(defn parse-numbers
-  "JSON reader helper which implements string to double decoding. This
-  function is used to normalize string encoded numerics into raw JVM
-  numerics for better use from Clojure clients."
-
-  [m]
-  (into {}
-        (for [[k v] m]
-          [k
-           (cond (map? v)
-                   (parse-numbers v)
-
-                 (or (nil? v)
-                     (number? v))
-                   v
-
-                 (and (string? v)
-                      (->> v
-                           (re-matches #"^(\d*\.?\d*)$")))
-                   (Double/parseDouble v)
-
-                 true
-                   v)])))
 
 
 (defn parse-for
