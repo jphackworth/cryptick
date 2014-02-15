@@ -38,9 +38,9 @@
 (def default-options
   (atom
    {:content-type "application/json"
-    :user-agent "cryptick 0.1.2"
+    :user-agent "cryptick 0.1.3"
     :insecure? false
-    :keepalive -1
+    :keepalive 1000
     }))
 
 (def feeds
